@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH -J GSJACOBI
+#SBATCH -o GSJACOBI.o%j
+#SBATCH -n 16
+#SBATCH -p normal
+#SBATCH -t 00:30:00
+#SBATCH --mail-user=mcdonald@cims.nyu.edu
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+#SBATCH -A TG-ASC150003
+
+export OMP_NUM_THREADS=16
+./gs-omp 1000
+./jacobi-omp 1000
+
+
+
