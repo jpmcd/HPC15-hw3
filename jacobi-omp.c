@@ -33,52 +33,53 @@ int main(int argc, char* argv[])
 
     double start = omp_get_wtime();
 
-    //#pragma omp parallel shared(utemp, u, sum) private(diff)
+    #pragma omp parallel shared(utemp, u, sum) private(diff)
     {
         printf("Computing u with %d threads... this is thread %d.\n", omp_get_num_threads(), omp_get_thread_num());
+    }
 
         for (iter = 0; iter < T; iter++) {
 
-            //#pragma omp parallel shared(utemp, u, sum) private(diff)
-            {
-            //#pragma omp single
-            {
-                sum = 0.;
-
-                utemp[0] = hsq*(f -(-u[1])/hsq)/2;
-                utemp[N-1] = hsq*(f - (-u[N-2])/hsq)/2;
-            }
-
             #pragma omp parallel shared(utemp, u, sum) private(diff)
             {
-            #pragma omp for
-            for (i = 1; i < N-1; ++i)
-                utemp[i] = hsq*(f - (-u[i-1] - u[i+1])/hsq)/2;
+                #pragma omp single
+                {
+                    sum = 0.;
 
-            #pragma omp for
-            for (i = 0; i < N; ++i)
-                u[i] = utemp[i];
+                    utemp[0] = hsq*(f -(-u[1])/hsq)/2;
+                    utemp[N-1] = hsq*(f - (-u[N-2])/hsq)/2;
+                }
 
-            #pragma omp for reduction (+:sum)
-            for (i = 1; i < N-1; ++i) {
-                diff = (-u[i-1] + 2*u[i] - u[i+1])/hsq - 1;
-                sum += diff*diff;
-            }
-            }
+            //#pragma omp parallel shared(utemp, u, sum) private(diff)
+                {
+                    #pragma omp for
+                    for (i = 1; i < N-1; ++i)
+                        utemp[i] = hsq*(f - (-u[i-1] - u[i+1])/hsq)/2;
 
-            //#pragma omp single
-            {
-                diff = (2*u[0] - u[1])/hsq - 1;
-                sum += diff*diff;
+                    #pragma omp for
+                    for (i = 0; i < N; ++i)
+                        u[i] = utemp[i];
 
-                diff = (-u[N-2] + 2*u[N-1])/hsq - 1;
-                sum += diff*diff;
+                    #pragma omp for reduction (+:sum)
+                    for (i = 1; i < N-1; ++i) {
+                        diff = (-u[i-1] + 2*u[i] - u[i+1])/hsq - 1;
+                        sum += diff*diff;
+                    }
+                }
 
-                res = sqrt(sum);        
-            }
+                #pragma omp single
+                {
+                    diff = (2*u[0] - u[1])/hsq - 1;
+                    sum += diff*diff;
+
+                    diff = (-u[N-2] + 2*u[N-1])/hsq - 1;
+                    sum += diff*diff;
+
+                    res = sqrt(sum);        
+                }
             }
         }
-    }
+    
 
     double end = omp_get_wtime();
     double elapsed = end - start;
@@ -88,13 +89,6 @@ int main(int argc, char* argv[])
     printf("iterations = %d\n", iter);
     printf("elapsed time = %f\n", elapsed);
     printf("midpoint = %f\n", u[N/2]);
-
-    /*
-    for (i = 0; i < N; ++i){
-        printf("u[%d]=%f\n", i, u[i]);
-    }
-    */
-
 
     free(u);
     free(utemp);

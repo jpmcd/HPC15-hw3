@@ -28,53 +28,54 @@ int main(int argc, char *argv[]) {
 
     double start = omp_get_wtime();
 
-    //#pragma omp parallel shared(u, sum) private(diff)
+    #pragma omp parallel
     {
         printf("Computing u with %d threads... this is thread %d.\n", omp_get_num_threads(), omp_get_thread_num());
-        for (iter = 0; iter < T; iter++) {
+    }
 
-            #pragma omp parallel shared(u, sum) private(diff)
+    for (iter = 0; iter < T; iter++) {
+
+        #pragma omp parallel shared(u, sum) private(diff)
+        {
+            #pragma omp single
             {
-                #pragma omp single
-                {
-                    sum = 0.;
+                sum = 0.;
 
-                    u[0] = hsq*(f -(-u[1])/hsq)/2;
-                    if ((N-1) % 2 == 0)
-                        u[N-1] = hsq*(f - (-u[N-2])/hsq)/2;
-                }
+                u[0] = hsq*(f -(-u[1])/hsq)/2;
+                if ((N-1) % 2 == 0)
+                    u[N-1] = hsq*(f - (-u[N-2])/hsq)/2;
+            }
 
-                //#pragma omp parallel shared(u, sum) private(diff)
-                {
-                    #pragma omp for
-                    for (i = 1; i < N-1; i += 2)
-                        u[i] = hsq*(f - (-u[i-1] - u[i+1])/hsq)/2;
-
-                    #pragma omp single
-                    if ((N-1) % 2 == 1)
-                        u[N-1] = hsq*(f - (-u[N-2])/hsq)/2;
-
-                    #pragma omp for
-                    for (i = 2; i < N-1; i += 2)
-                        u[i] = hsq*(f - (-u[i-1] - u[i+1])/hsq)/2;
-
-                    #pragma omp for reduction(+:sum)
-                    for (i = 1; i < N-1; ++i){
-                        diff = (-u[i-1] + 2*u[i] - u[i+1])/hsq - 1;
-                        sum += diff*diff;
-                    }
-                }
+            //#pragma omp parallel shared(u, sum) private(diff)
+            {
+                #pragma omp for
+                for (i = 1; i < N-1; i += 2)
+                    u[i] = hsq*(f - (-u[i-1] - u[i+1])/hsq)/2;
 
                 #pragma omp single
-                {
-                    diff = (2*u[0] - u[1])/hsq - 1;
-                    sum += diff*diff;
+                if ((N-1) % 2 == 1)
+                    u[N-1] = hsq*(f - (-u[N-2])/hsq)/2;
 
-                    diff = (-u[N-2] + 2*u[N-1])/hsq - 1;
-                    sum += diff*diff;
+                #pragma omp for
+                for (i = 2; i < N-1; i += 2)
+                    u[i] = hsq*(f - (-u[i-1] - u[i+1])/hsq)/2;
 
-                    res = sqrt(sum);
+                #pragma omp for reduction(+:sum)
+                for (i = 1; i < N-1; ++i){
+                    diff = (-u[i-1] + 2*u[i] - u[i+1])/hsq - 1;
+                    sum += diff*diff;
                 }
+            }
+
+            #pragma omp single
+            {
+                diff = (2*u[0] - u[1])/hsq - 1;
+                sum += diff*diff;
+
+                diff = (-u[N-2] + 2*u[N-1])/hsq - 1;
+                sum += diff*diff;
+
+                res = sqrt(sum);
             }
         }
     }
@@ -89,7 +90,10 @@ int main(int argc, char *argv[]) {
 
     free(u);
 
+    return 0;
 }
+
+
 
 
 
