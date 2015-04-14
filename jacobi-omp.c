@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     double f = 1.;
 
     int iter = 0;
-    int T = 2500000;
+    int T = 25;
     double res = sqrt(N);
     double sum;
     double diff;
@@ -31,12 +31,13 @@ int main(int argc, char* argv[])
         u[i] = 0.;
 
 
-    double start = omp_get_wtime();
-
-    //#pragma omp parallel shared(utemp, u, sum) private(diff)
+    #pragma omp parallel 
     {
+        #pragma omp single
         printf("Computing u with %d threads.\n", omp_get_num_threads());
     }
+
+    double start = omp_get_wtime();
 
         for (iter = 0; iter < T; iter++) {
 

@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     double f = 1.;
 
     int iter = 0;
-    int T = 2500000;
+    int T = 25;
     double res = sqrt(N);
     double sum;
     double diff;
@@ -26,12 +26,13 @@ int main(int argc, char *argv[]) {
         u[i] = 0.;
 
 
-    double start = omp_get_wtime();
-
-    //#pragma omp parallel
+    #pragma omp parallel
     {
+        #pragma omp single
         printf("Computing u with %d threads.\n", omp_get_num_threads());
     }
+
+    double start = omp_get_wtime();
 
     for (iter = 0; iter < T; iter++) {
 
@@ -49,7 +50,7 @@ int main(int argc, char *argv[]) {
             //#pragma omp parallel shared(u, sum) private(diff)
             {
                 #pragma omp for
-                for (i = 1; i < N-1; i += 2)
+                for (i = 2; i < N-1; i += 2)
                     u[i] = hsq*(f - (-u[i-1] - u[i+1])/hsq)/2;
 
                 #pragma omp single
@@ -57,7 +58,7 @@ int main(int argc, char *argv[]) {
                     u[N-1] = hsq*(f - (-u[N-2])/hsq)/2;
 
                 #pragma omp for
-                for (i = 2; i < N-1; i += 2)
+                for (i = 1; i < N-1; i += 2)
                     u[i] = hsq*(f - (-u[i-1] - u[i+1])/hsq)/2;
 
                 #pragma omp for reduction(+:sum)
