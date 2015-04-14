@@ -28,9 +28,9 @@ int main(int argc, char *argv[]) {
 
     double start = omp_get_wtime();
 
-    #pragma omp parallel
+    //#pragma omp parallel
     {
-        printf("Computing u with %d threads... this is thread %d.\n", omp_get_num_threads(), omp_get_thread_num());
+        printf("Computing u with %d threads.\n", omp_get_num_threads());
     }
 
     for (iter = 0; iter < T; iter++) {
