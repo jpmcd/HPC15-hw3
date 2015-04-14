@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     #pragma omp parallel
     {
         #pragma omp single
-        printf("Computing u with %d threads.\n", omp_get_num_threads());
+        printf("Computing u with Gauss-Seidel on %d threads.\n", omp_get_num_threads());
     }
 
     double start = omp_get_wtime();
